@@ -13,11 +13,11 @@ class AIService {
     });
   }
 
-  async sendTextMessage(user_input) {
+  async sendTextMessage(message) {
     try {
       return await this.client.post('', 
         {
-          user_input: user_input,
+          user_input: message,
           response_format: 'stream'
         },
         {
@@ -37,7 +37,7 @@ class AIService {
     try {
       const formData = new FormData();
       formData.append('record_file', audioBuffer, {
-        filename: filename || 'record_file.wav',
+        filename: filename || 'audio.wav',
         contentType: mimeType
       });
       formData.append('response_format', 'stream');

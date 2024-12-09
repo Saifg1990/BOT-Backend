@@ -5,7 +5,7 @@ const ResponseHandler = require('../utils/response.utils');
 
 async function handleTextChat(req, res) {
   try {
-    const response = await aiService.sendTextMessage(req.body.user_input);
+    const response = await aiService.sendTextMessage(req.body.message);
     const streamHandler = new StreamHandler(res, req.headers['client-id'], broadcastMessage);
     
     streamHandler.setupSSEHeaders();

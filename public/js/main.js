@@ -8,10 +8,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Text message handling
     async function sendTextMessage() {
-        const user_input = messageInput.value.trim();
-        if (!user_input) return;
+        const message = messageInput.value.trim();
+        if (!message) return;
 
-        chatUI.addMessage(user_input, true);
+        chatUI.addMessage(message, true);
         messageInput.value = '';
 
         try {
@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     'Content-Type': 'application/json',
                     'Accept': 'text/event-stream'
                 },
-                body: JSON.stringify({ user_input })
+                body: JSON.stringify({ message })
             });
 
             if (!response.ok) {
