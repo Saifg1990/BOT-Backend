@@ -51,9 +51,26 @@ app.get('/health', (req, res) => {
 const PORT = process.env.PORT || 3000;
 
 // Sync database and start server
-db.sequelize.sync().then(() => {
-  server.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log(`API Documentation available at http://localhost:${PORT}/api-docs`);
+function startServer() {
+  db.sequelize.sync().then(() => {
+    server.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+      console.log(`API Documentation available at http://localhost:${PORT}/api-docs`);
+    });
+  }).catch(err => {
+    console.error('Failed to sync database:', err);
+    setTimeout(startServer, 5000); // Retry after 5 seconds
   });
+}
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  setTimeout(startServer, 5000); // Restart server after 5 seconds
 });
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  setTimeout(startServer, 5000); // Restart server after 5 seconds
+});
+
+startServer();
