@@ -1,0 +1,337 @@
+openapi: 3.0.0
+info:
+  title: Chat AI API Documentation
+  version: 1.0.0
+  description: API documentation for the Chat AI service
+
+servers:
+  - url: http://localhost:3000
+    description: Development server
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        ulid:
+          type: string
+        apiKey:
+          type: string
+        apiSecret:
+          type: string
+        ipAddress:
+          type: string
+
+    Bot:
+      type: object
+      properties:
+        id:
+          type: integer
+        company_name:
+          type: string
+        company_logo:
+          type: string
+        company_website:
+          type: string
+        company_information_doc:
+          type: string
+        company_extra_informations:
+          type: string
+        background_color:
+          type: string
+        primary_color:
+          type: string
+        secondary_color:
+          type: string
+        third_color:
+          type: string
+        bot_name:
+          type: string
+        bot_avatar:
+          type: string
+        bot_language:
+          type: string
+        bot_greeting_message:
+          type: string
+        userId:
+          type: integer
+
+    Chat:
+      type: object
+      properties:
+        id:
+          type: integer
+        ulid:
+          type: string
+        userId:
+          type: integer
+        botId:
+          type: integer
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+            type:
+              type: string
+            fields:
+              type: object
+
+paths:
+  /api/auth/init:
+    post:
+      tags:
+        - Authentication
+      summary: Initialize chat session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                business:
+                  type: string
+                  description: User ULID
+              required:
+                - business
+      responses:
+        '200':
+          description: Chat session initialized successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  expires_in:
+                    type: integer
+                  chat:
+                    $ref: '#/components/schemas/Chat'
+                  bot:
+                    $ref: '#/components/schemas/Bot'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+                passwordConfirmation:
+                  type: string
+              required:
+                - name
+                - email
+                - password
+                - passwordConfirmation
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+              required:
+                - email
+                - password
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: object
+                    properties:
+                      access_token:
+                        type: string
+                      token_type:
+                        type: string
+                      expires_in:
+                        type: integer
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/bot-settings:
+    get:
+      tags:
+        - Bot Settings
+      summary: Get bot settings
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Bot settings retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bot'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Bot not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      tags:
+        - Bot Settings
+      summary: Update bot settings
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                company_name:
+                  type: string
+                company_logo:
+                  type: string
+                company_website:
+                  type: string
+                  format: uri
+                company_information_doc:
+                  type: string
+                company_extra_informations:
+                  type: string
+                background_color:
+                  type: string
+                primary_color:
+                  type: string
+                secondary_color:
+                  type: string
+                third_color:
+                  type: string
+                bot_name:
+                  type: string
+                bot_avatar:
+                  type: string
+                bot_language:
+                  type: string
+                bot_greeting_message:
+                  type: string
+                ip_address:
+                  type: string
+                  format: ipv4
+              required:
+                - company_name
+                - company_logo
+                - company_website
+                - company_information_doc
+                - company_extra_informations
+                - background_color
+                - primary_color
+                - secondary_color
+                - third_color
+                - bot_name
+                - bot_avatar
+                - bot_language
+                - bot_greeting_message
+                - ip_address
+      responses:
+        '200':
+          description: Bot settings updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bot'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:

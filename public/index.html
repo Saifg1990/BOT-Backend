@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat Interface</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="input-container">
+            <div class="text-input-container">
+                <input type="text" id="messageInput" placeholder="Type your message...">
+                <button id="sendButton">Send</button>
+            </div>
+            <div class="audio-input-container">
+                <button id="recordButton">
+                    <span class="record-icon"></span>
+                    Record
+                </button>
+                <span id="recordingStatus"></span>
+            </div>
+        </div>
+    </div>
+    <script src="js/websocket.js"></script>
+    <script src="js/audioRecorder.js"></script>
+    <script src="js/chatUI.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
