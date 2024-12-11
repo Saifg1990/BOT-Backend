@@ -1,163 +1,162 @@
 const jwt = require('jsonwebtoken');
-const { v4: uuidv4 } = require('uuid');
-const { ValidationError } = require('../utils/errors');
+const {v4: uuidv4} = require('uuid');
+const {ValidationError} = require('../utils/errors');
 const config = require('../config/auth.config');
 const db = require('../models');
-const { validatePassword } = require('../utils/validation.utils');
-const { ulid } = require('ulid');
+const {validatePassword} = require('../utils/validation.utils');
+const {ulid} = require('ulid');
+const AuthService = require('../services/auth.service');
+const ResponseHandler = require('../utils/response.utils');
 
 class AuthController {
-  async init(req, res) {
-    try {
-      const { business } = req.body;
+    async init(req, res) {
+        try {
+            console.log('Init method called');
+            const {business} = req.body;
 
-      if (!business) {
-        throw new ValidationError('Business ID is required');
-      }
+            // Find user with associated bot
+            const user = await AuthService.findUserByUlid(business);
+            console.log('User found:', user);
 
-      const user = await db.User.findOne({
-        where: { ulid: business },
-        include: [{
-          model: db.Bot,
-          as: 'Bot'
-        }]
-      });
+            // If no bot is associated with the user, create one
+            if (!user.Bot) {
+                console.log('No bot found, creating new bot');
+                user.Bot = await db.Bot.create({
+                    userId: user.id,
+                    bot_name: `${user.name}'s Bot`,
+                });
+            }
 
-      if (!user) {
-        throw new ValidationError('User not found', 404);
-      }
+            // Optional IP check
+            // await AuthService.validateIpAddress(user, req.ip);
+            // console.log('IP address validated');
 
-      // Uncomment to enable IP check
-      if (req.ip !== user.ipAddress) {
-        throw new ValidationError('Unauthorized IP address', 401);
-      }
+            // Create new chat
+            const chat = await AuthService.createChat(user.id, user.ulid, user.Bot.id);
 
-      const chat = await db.Chat.create({
-        userId: user.id,
-        botId: user.Bot.id
-      });
+            // Generate JWT token
+            const token = AuthService.generateToken(user.id);
 
-      const token = jwt.sign({ id: user.id }, config.jwtSecret, {
-        expiresIn: config.jwtExpiration
-      });
-
-      return res.json({
-        token,
-        expires_in: config.jwtExpiration,
-        chat,
-        bot: user.Bot
-      });
-    } catch (error) {
-      return res.status(error.status || 500).json({
-        error: error.message
-      });
+            return ResponseHandler.success(res, {
+                token,
+                expires_in: config.jwtExpiration,
+                chat,
+                bot: user.Bot
+            });
+        } catch (error) {
+            console.error('Error in init method:', error);
+            return ResponseHandler.error(res, {
+                message: error.message,
+                type: error.name,
+                stack: error.stack
+            });
+        }
     }
-  }
 
-  async register(req, res) {
-    try {
-      const { name, email, password, passwordConfirmation } = req.body;
+    async register(req, res) {
+        try {
+            const {name, email, password, passwordConfirmation} = req.body;
 
-      if (password !== passwordConfirmation) {
-        throw new ValidationError('Passwords do not match');
-      }
+            if (password !== passwordConfirmation) {
+                throw new ValidationError('Passwords do not match');
+            }
 
-      await validatePassword(password);
+            await validatePassword(password);
 
-      const user = await db.User.create({
-        name,
-        email,
-        password,
-        ulid: ulid(),
-        ipAddress: req.ip,
-        apiKey: uuidv4(),
-        apiSecret: uuidv4()
-      });
+            const user = await db.User.create({
+                name,
+                email,
+                password,
+                ulid: ulid(),
+                ipAddress: req.ip,
+                apiKey: uuidv4(),
+                apiSecret: uuidv4()
+            });
 
-      const userData = user.toJSON();
-      delete userData.password;
+            const userData = user.toJSON();
+            delete userData.password;
 
-      return res.status(201).json({
-        success: true,
-        data: userData
-      });
-    } catch (error) {
-      return res.status(error.status || 500).json({
-        error: error.message
-      });
+            return res.status(201).json({
+                success: true,
+                data: userData
+            });
+        } catch (error) {
+            return res.status(error.status || 500).json({
+                error: error.message
+            });
+        }
     }
-  }
 
-  async login(req, res) {
-    try {
-      const { email, password } = req.body;
+    async login(req, res) {
+        try {
+            const {email, password} = req.body;
 
-      const user = await db.User.findOne({ where: { email } });
-      if (!user) {
-        throw new ValidationError('Invalid credentials');
-      }
+            const user = await db.User.findOne({where: {email}});
+            if (!user) {
+                throw new ValidationError('Invalid credentials');
+            }
 
-      const isValidPassword = await user.comparePassword(password);
-      if (!isValidPassword) {
-        throw new ValidationError('Invalid credentials');
-      }
+            const isValidPassword = await user.comparePassword(password);
+            if (!isValidPassword) {
+                throw new ValidationError('Invalid credentials');
+            }
 
-      const token = jwt.sign({ id: user.id }, config.jwtSecret, {
-        expiresIn: config.jwtExpiration
-      });
+            const token = jwt.sign({id: user.id}, config.jwtSecret, {
+                expiresIn: config.jwtExpiration
+            });
 
-      const userData = user.toJSON();
-      delete userData.password;
+            const userData = user.toJSON();
+            delete userData.password;
 
-      return res.json({
-        token: {
-          access_token: token,
-          token_type: 'Bearer',
-          expires_in: config.jwtExpiration
-        },
-        user: userData
-      });
-    } catch (error) {
-      return res.status(error.status || 500).json({
-        error: error.message
-      });
+            return res.json({
+                token: {
+                    access_token: token,
+                    token_type: 'Bearer',
+                    expires_in: config.jwtExpiration
+                },
+                user: userData
+            });
+        } catch (error) {
+            return res.status(error.status || 500).json({
+                error: error.message
+            });
+        }
     }
-  }
 
-  async me(req, res) {
-    try {
-      const userData = req.user.toJSON();
-      delete userData.password;
-      return res.json(userData);
-    } catch (error) {
-      return res.status(error.status || 500).json({
-        error: error.message
-      });
+    async me(req, res) {
+        try {
+            const userData = req.user.toJSON();
+            delete userData.password;
+            return res.json(userData);
+        } catch (error) {
+            return res.status(error.status || 500).json({
+                error: error.message
+            });
+        }
     }
-  }
 
-  async logout(req, res) {
-    // In a more complex system, you might want to blacklist the token here
-    return res.json({ success: true });
-  }
-
-  async refresh(req, res) {
-    try {
-      const token = jwt.sign({ id: req.user.id }, config.jwtSecret, {
-        expiresIn: config.jwtExpiration
-      });
-
-      return res.json({
-        access_token: token,
-        token_type: 'Bearer',
-        expires_in: config.jwtExpiration
-      });
-    } catch (error) {
-      return res.status(error.status || 500).json({
-        error: error.message
-      });
+    async logout(req, res) {
+        // No need to do anything here, the token is stateless
+        return res.json({success: true});
     }
-  }
+
+    async refresh(req, res) {
+        try {
+            const token = jwt.sign({id: req.user.id}, config.jwtSecret, {
+                expiresIn: config.jwtExpiration
+            });
+
+            return res.json({
+                access_token: token,
+                token_type: 'Bearer',
+                expires_in: config.jwtExpiration
+            });
+        } catch (error) {
+            return res.status(error.status || 500).json({
+                error: error.message
+            });
+        }
+    }
 }
 
 module.exports = new AuthController();

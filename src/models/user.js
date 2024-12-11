@@ -1,11 +1,17 @@
-const { Model, DataTypes } = require('sequelize');
+const { Model } = require('sequelize');
 const bcrypt = require('bcryptjs');
 
-module.exports = (sequelize) => {
+module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     static associate(models) {
-      User.hasMany(models.Chat, { foreignKey: 'userId' });
-      User.hasOne(models.Bot, { foreignKey: 'userId' });
+      User.hasOne(models.Bot, {
+        as: 'Bot',
+        foreignKey: 'userId'
+      });
+      User.hasMany(models.Chat, {
+        as: 'Chats',
+        foreignKey: 'userId'
+      });
     }
 
     async comparePassword(password) {
@@ -14,11 +20,6 @@ module.exports = (sequelize) => {
   }
 
   User.init({
-    id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true
-    },
     name: {
       type: DataTypes.STRING,
       allowNull: false
@@ -68,4 +69,4 @@ module.exports = (sequelize) => {
   });
 
   return User;
-};
+}

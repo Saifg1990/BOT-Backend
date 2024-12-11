@@ -6,7 +6,8 @@ class BotSettingsController {
     async show(req, res) {
         try {
             const bot = await db.Bot.findOrCreate({
-                where: { userId: req.user.id }
+                where: {userId: req.user?.id},
+                raw: true // Prevent recursion by returning plain object
             });
 
             if (!bot) {
@@ -24,7 +25,8 @@ class BotSettingsController {
     async update(req, res) {
         try {
             const bot = await db.Bot.findOne({
-                where: { userId: req.user.id }
+                where: {userId: req.user?.id},
+                raw: true // Prevent recursion by returning plain object
             });
 
             if (!bot) {
@@ -33,18 +35,20 @@ class BotSettingsController {
 
             const data = await validateBotSettings(req.body);
 
-            // Update user's IP address
+            // Update user's IP address only if it exists in the data
+        if (data.ip_address) {
             await req.user.update({
                 ipAddress: data.ip_address
             });
+        }
 
-            // Update bot settings
-            await bot.update(data);
-
-            return res.json(bot);
+            await db.Bot.update(data, {where: {id: bot.id}});
+            const updatedBot = await db.Bot.findOne({where: {id: bot.id}, raw: true});
+            return res.json(updatedBot);
         } catch (error) {
             return res.status(error.status || 500).json({
-                error: error.message
+                error: error.message,
+                details: error.fields || error.stack
             });
         }
     }

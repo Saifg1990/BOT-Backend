@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/user');
+const { User } = require('../models');
 const config = require('../config/auth.config');
 const { APIError } = require('../utils/errors');
 
@@ -16,7 +16,7 @@ async function authenticate(req, res, next) {
     }
 
     const decoded = jwt.verify(token, config.jwtSecret);
-    const user = await User.findByPk(decoded.id);
+    const user = await User.findOne({ where: { id: decoded.id } });
 
     if (!user) {
       throw new APIError('User not found', 401);
