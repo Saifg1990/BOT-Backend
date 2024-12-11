@@ -7,18 +7,18 @@ module.exports = (sequelize) => {
             Bot.belongsTo(models.User, { foreignKey: 'userId' });
         }
 
-        // Getter methods for file URLs
-        getCompanyLogoUrl() {
-            return this.company_logo ? `${process.env.STORAGE_URL}/${this.company_logo}` : null;
-        }
-
-        getCompanyInformationDocUrl() {
-            return this.company_information_doc ? `${process.env.STORAGE_URL}/${this.company_information_doc}` : null;
-        }
-
-        getBotAvatarUrl() {
-            return this.bot_avatar ? `${process.env.STORAGE_URL}/${this.bot_avatar}` : null;
-        }
+        // // Getter methods for file URLs
+        // getCompanyLogoUrl() {
+        //     return this.company_logo ? `${process.env.STORAGE_URL}/${this.company_logo}` : null;
+        // }
+        //
+        // getCompanyInformationDocUrl() {
+        //     return this.company_information_doc ? `${process.env.STORAGE_URL}/${this.company_information_doc}` : null;
+        // }
+        //
+        // getBotAvatarUrl() {
+        //     return this.bot_avatar ? `${process.env.STORAGE_URL}/${this.bot_avatar}` : null;
+        // }
     }
 
     Bot.init({
@@ -34,9 +34,9 @@ module.exports = (sequelize) => {
         company_logo: {
             type: DataTypes.STRING,
             allowNull: true,
-            get() {
-                return this.getCompanyLogoUrl();
-            }
+            // get() {
+            //     return this.getCompanyLogoUrl();
+            // }
         },
         company_website: {
             type: DataTypes.STRING,
@@ -45,9 +45,9 @@ module.exports = (sequelize) => {
         company_information_doc: {
             type: DataTypes.STRING,
             allowNull: true,
-            get() {
-                return this.getCompanyInformationDocUrl();
-            }
+            // get() {
+            //     return this.getCompanyInformationDocUrl();
+            // }
         },
         company_extra_informations: {
             type: DataTypes.TEXT,
@@ -76,9 +76,9 @@ module.exports = (sequelize) => {
         bot_avatar: {
             type: DataTypes.STRING,
             allowNull: true,
-            get() {
-                return this.getBotAvatarUrl();
-            }
+            // get() {
+            //     return this.getBotAvatarUrl();
+            // }
         },
         bot_language: {
             type: DataTypes.STRING,
