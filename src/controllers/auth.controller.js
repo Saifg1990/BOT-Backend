@@ -24,6 +24,7 @@ class AuthController {
                 user.Bot = await db.Bot.create({
                     userId: user.id,
                     bot_name: `${user.name}'s Bot`,
+                    company_name: `${user.name}'s Company`,
                 });
             }
 
