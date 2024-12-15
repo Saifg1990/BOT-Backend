@@ -2,7 +2,7 @@ const axios = require('axios');
 const FormData = require('form-data');
 const { APIError } = require('../utils/errors');
 const config = require('../config/api.config');
-const { Bot,User } = require('../models');
+const { Bot } = require('../models');
 
 class AIService {
   constructor() {
