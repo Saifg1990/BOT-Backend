@@ -3,8 +3,10 @@ const { Model, DataTypes } = require('sequelize');
 module.exports = (sequelize) => {
     class Bot extends Model {
         static associate(models) {
-            Bot.hasMany(models.Chat, { foreignKey: 'botId' });
-            Bot.belongsTo(models.User, { foreignKey: 'userId' });
+            Bot.belongsTo(models.User, {
+                foreignKey: 'userId',
+                as: 'user'
+            });
         }
 
         // // Getter methods for file URLs

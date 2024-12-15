@@ -5,7 +5,7 @@ const ResponseHandler = require('../utils/response.utils');
 
 async function handleTextChat(req, res) {
   try {
-    const response = await aiService.sendTextMessage(req.body.message);
+    const response = await aiService.sendTextMessage(req, req.body.message);
     const streamHandler = new StreamHandler(res, req.headers['client-id'], broadcastMessage);
     
     streamHandler.setupSSEHeaders();
@@ -21,6 +21,7 @@ async function handleTextChat(req, res) {
 async function handleAudioChat(req, res) {
   try {
     const response = await aiService.sendAudioMessage(
+      req,
       req.file.buffer,
       req.file.mimetype,
       req.file.originalname

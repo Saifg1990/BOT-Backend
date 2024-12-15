@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const { handleTextChat, handleAudioChat } = require('../controllers/ai.controller');
+const { authenticate } = require('../middleware/auth.middleware');
 const { validateMessage, validateAudioUpload } = require('../middleware/validation.middleware');
 
 const upload = multer({
@@ -11,7 +12,7 @@ const upload = multer({
   }
 });
 
-router.post('/chat/text', validateMessage, handleTextChat);
-router.post('/chat/audio', upload.single('audio'), validateAudioUpload, handleAudioChat);
+router.post('/chat/text', [validateMessage,authenticate], handleTextChat);
+router.post('/chat/audio', upload.single('audio'), [validateAudioUpload,authenticate], handleAudioChat);
 
 module.exports = router;

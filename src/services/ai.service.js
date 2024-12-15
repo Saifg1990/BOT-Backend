@@ -2,6 +2,7 @@ const axios = require('axios');
 const FormData = require('form-data');
 const { APIError } = require('../utils/errors');
 const config = require('../config/api.config');
+const { Bot,User } = require('../models');
 
 class AIService {
   constructor() {
@@ -13,11 +14,19 @@ class AIService {
     });
   }
 
-  async sendTextMessage(message) {
+  async sendTextMessage(req,message) {
+    const bot = await Bot.findOne({
+      where: { userId: req.user.id },
+    });
     try {
-      return await this.client.post('', 
+      return await this.client.post('',
         {
           user_input: message,
+          company: bot.company_name,
+          company_url: bot.company_website,
+          language: bot.bot_language,
+          info: bot.company_extra_informations,
+          docs_path: '/shrd/' + bot.company_information_doc,
           response_format: 'stream'
         },
         {
@@ -33,11 +42,19 @@ class AIService {
     }
   }
 
-  async sendAudioMessage(audioBuffer, mimeType, filename) {
+  async sendAudioMessage(req,audioBuffer, mimeType, filename) {
+    const bot = await Bot.findOne({
+      where: { userId: req.user.id },
+    });
     try {
       const formData = new FormData();
       formData.append('record_file', audioBuffer, {
         filename: filename || 'audio.wav',
+        company: bot.company_name,
+        company_url: bot.company_website,
+        language: bot.bot_language,
+        info: bot.company_extra_informations,
+        docs_path: '/shrd/' + bot.company_information_doc,
         contentType: mimeType
       });
       formData.append('response_format', 'stream');

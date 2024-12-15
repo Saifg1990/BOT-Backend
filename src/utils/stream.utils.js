@@ -1,9 +1,12 @@
+const AudioService = require('../services/audio.service');
+
 class StreamHandler {
   constructor(res, clientId, broadcastMessage) {
     this.res = res;
     this.clientId = clientId;
     this.broadcastMessage = broadcastMessage;
     this.buffer = '';
+    this.isComplete = false;
   }
 
   setupSSEHeaders() {
@@ -24,14 +27,29 @@ class StreamHandler {
     }
   }
 
-  processLine(line) {
+  async processLine(line) {
     if (!line.trim()) return;
 
     try {
       const data = JSON.parse(line);
-      if (data.type === 'text' || data.type === 'audio') {
+
+      if (data.type === 'text') {
         this.broadcastMessage(this.clientId, data);
         this.res.write(`data: ${JSON.stringify(data)}\n\n`);
+      } else if (data.type === 'audio') {
+        // Store audio chunk instead of sending immediately
+        AudioService.addAudioChunk(this.clientId, data.content);
+      } else if (data.type === 'complete') {
+        this.isComplete = true;
+        // Get final concatenated audio
+        const audioBuffer = await AudioService.getFinalAudio(this.clientId);
+        const finalAudioData = {
+          type: 'audio',
+          content: audioBuffer.toString('base64')
+        };
+
+        this.broadcastMessage(this.clientId, finalAudioData);
+        this.res.write(`data: ${JSON.stringify(finalAudioData)}\n\n`);
       }
     } catch (error) {
       console.error('Error parsing line:', error);
@@ -40,15 +58,36 @@ class StreamHandler {
 
   handleError(error) {
     console.error('Stream error:', error);
+    AudioService.clearAudioBuffers(this.clientId);
     this.res.write(`data: ${JSON.stringify({ type: 'error', content: 'Stream error occurred' })}\n\n`);
     this.res.end();
   }
 
-  handleEnd() {
-    if (this.buffer.trim()) {
-      this.processLine(this.buffer);
+  async handleEnd() {
+    try {
+      if (this.buffer.trim()) {
+        await this.processLine(this.buffer);
+      }
+
+      if (!this.isComplete) {
+        // If stream ended without complete signal, send whatever audio we have
+        const audioBuffer = await AudioService.getFinalAudio(this.clientId);
+        if (audioBuffer.length > 0) {
+          const finalAudioData = {
+            type: 'audio',
+            content: audioBuffer.toString('base64')
+          };
+
+          this.broadcastMessage(this.clientId, finalAudioData);
+          this.res.write(`data: ${JSON.stringify(finalAudioData)}\n\n`);
+        }
+      }
+    } catch (error) {
+      console.error('Error handling stream end:', error);
+    } finally {
+      AudioService.clearAudioBuffers(this.clientId);
+      this.res.end();
     }
-    this.res.end();
   }
 }
 
