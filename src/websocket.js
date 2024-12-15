@@ -31,6 +31,7 @@ function handleMessage(clientId, data) {
   switch (data.type) {
     case 'text':
     case 'audio':
+    case 'transcription':
       broadcastMessage(clientId, data);
       break;
     default:

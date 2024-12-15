@@ -36,7 +36,13 @@ class StreamHandler {
       if (data.type === 'text') {
         this.broadcastMessage(this.clientId, data);
         this.res.write(`data: ${JSON.stringify(data)}\n\n`);
-      } else if (data.type === 'audio') {
+      }
+      else if (data.type === 'transcription') {
+        // send transcription to client
+        this.broadcastMessage(this.clientId, data);
+        this.res.write(`data: ${JSON.stringify(data)}\n\n`);
+      }
+      else if (data.type === 'audio') {
         // Store audio chunk instead of sending immediately
         AudioService.addAudioChunk(this.clientId, data.content);
       } else if (data.type === 'complete') {
