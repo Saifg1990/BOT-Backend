@@ -8,10 +8,10 @@ module.exports = (sequelize, DataTypes) => {
         as: 'Bot',
         foreignKey: 'userId'
       });
-      User.hasMany(models.Chat, {
-        as: 'Chats',
-        foreignKey: 'userId'
-      });
+      // User.hasMany(models.Chat, {
+      //   as: 'Chats',
+      //   foreignKey: 'userId'
+      // });
     }
 
     async comparePassword(password) {
