@@ -45,6 +45,8 @@ class StreamHandler {
       else if (data.type === 'audio') {
         // Store audio chunk instead of sending immediately
         AudioService.addAudioChunk(this.clientId, data.content);
+        this.broadcastMessage(this.clientId, data);
+        this.res.write(`data: ${JSON.stringify(data)}\n\n`)
       } else if (data.type === 'complete') {
         this.isComplete = true;
         // Get final concatenated audio
