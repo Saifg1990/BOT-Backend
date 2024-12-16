@@ -35,8 +35,6 @@ async function validateBotSettings(data) {
         'company_extra_informations',
         'background_color',
         'primary_color',
-        'secondary_color',
-        'third_color',
         'bot_name',
         'bot_avatar',
         'bot_language',
