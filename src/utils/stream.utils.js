@@ -52,7 +52,7 @@ class StreamHandler {
         // Get final concatenated audio
         const audioBuffer = await AudioService.getFinalAudio(this.clientId);
         const finalAudioData = {
-          type: 'audio',
+          type: 'full_audio',
           content: audioBuffer.toString('base64')
         };
 
@@ -82,7 +82,7 @@ class StreamHandler {
         const audioBuffer = await AudioService.getFinalAudio(this.clientId);
         if (audioBuffer.length > 0) {
           const finalAudioData = {
-            type: 'audio',
+            type: 'full_audio',
             content: audioBuffer.toString('base64')
           };
 

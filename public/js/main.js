@@ -135,6 +135,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (data.type === 'audio') {
             const audioBlob = base64ToBlob(data.content, 'audio/wav');
             chatUI.addMessage(audioBlob);
+        } else if (data.type === 'full_audio') {
+            const audioBlob = base64ToBlob(data.content, 'audio/wav');
+            chatUI.addMessage(audioBlob);
         }
     }
 

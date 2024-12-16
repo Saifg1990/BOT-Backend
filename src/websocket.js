@@ -32,6 +32,7 @@ function handleMessage(clientId, data) {
     case 'text':
     case 'audio':
     case 'transcription':
+    case 'full_audio':
       broadcastMessage(clientId, data);
       break;
     default:
